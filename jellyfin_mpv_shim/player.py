@@ -1001,12 +1001,15 @@ class PlayerManager(object):
                         self._video.item.get("ParentIndexNumber"),
                         self._video.item.get("IndexNumber"),
                     )
+                    season_number = self._video.item.get("ParentIndexNumber")
                 else:
                     title = self._video.item.get("Name")
                     subtitle = str(self._video.item.get("ProductionYear", ""))
+                    season_number = None
                 send_presence(
                     title,
                     subtitle,
+                    season_number,
                     player.playback_time,
                     player.duration,
                     not player.pause,

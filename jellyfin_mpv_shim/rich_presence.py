@@ -3,6 +3,7 @@ from pypresence.types import ActivityType, StatusDisplayType
 import time
 import requests
 from functools import lru_cache
+import logging
 
 client_id = "743296148592263240"
 RPC = Client(client_id)
@@ -12,7 +13,7 @@ RPC.start()
 def register_join_event(syncplay_join_group: callable):
     RPC.register_event("activity_join", syncplay_join_group)
 
-def get_anilist_cover(anime_title):
+def get_anilist_cover(anime_title, season_number=None):
     """
     Fetch cover and banner images for an anime title using the AniList API.
     """
@@ -34,7 +35,10 @@ def get_anilist_cover(anime_title):
       }
     }
     """
-    variables = {"search": anime_title}
+    if season_number:
+        variables = {"search": f"{anime_title} Season {season_number}"}
+    else:
+        variables = {"search": anime_title}
 
     try:
         response = requests.post(url, json={"query": query, "variables": variables})
@@ -43,7 +47,8 @@ def get_anilist_cover(anime_title):
         media = data.get("data", {}).get("Media")
         if media:
             return {
-                "title": media["title"]["romaji"] or anime_title,
+                "title": media["title"]["romaji"],
+                "title_jp": media["title"]["native"],
                 "cover": media["coverImage"]["extraLarge"] or media["coverImage"]["large"],
                 "banner": media["bannerImage"],
                 "url": media["siteUrl"],
@@ -54,25 +59,28 @@ def get_anilist_cover(anime_title):
     return None
 
 @lru_cache(maxsize=200)
-def get_anilist_cover_cached(anime_title):
-    return get_anilist_cover(anime_title)
+def get_anilist_cover_cached(anime_title, season_number=None):
+    return get_anilist_cover(anime_title, season_number)
 
 def send_presence(
     title: str,
     subtitle: str,
+    season_number: str = None,
     playback_time: float = None,
     duration: float = None,
     playing: bool = False,
     syncplay_group: str = None,
 ):
     small_image = "play-dark3" if playing else None
-    anilist_data = get_anilist_cover_cached(title)
+    anilist_data = get_anilist_cover_cached(title, season_number=season_number)
     if anilist_data:
         image_url = anilist_data["cover"]
         anilist_url = anilist_data["url"]
+        image_text = anilist_data["title_jp"]
     else:
         image_url = "jellyfin2"
         anilist_url = None
+        image_text = title
     start = None
     end = None
     if playback_time is not None and duration is not None and playing:
@@ -89,7 +97,7 @@ def send_presence(
         "large_image": image_url,
         "start": start,
         "end": end,
-        "large_text": title,
+        "large_text": image_text,
         "small_image": small_image,
         "buttons": [{"label": "Anilist", "url": anilist_url}]
     }
