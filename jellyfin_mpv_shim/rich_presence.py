@@ -35,7 +35,7 @@ def get_anilist_cover(anime_title, season_number=None):
       }
     }
     """
-    if season_number:
+    if season_number and season_number > 1:
         variables = {"search": f"{anime_title} Season {season_number}"}
     else:
         variables = {"search": anime_title}
@@ -65,7 +65,7 @@ def get_anilist_cover_cached(anime_title, season_number=None):
 def send_presence(
     title: str,
     subtitle: str,
-    season_number: str = None,
+    season_number: int = None,
     playback_time: float = None,
     duration: float = None,
     playing: bool = False,

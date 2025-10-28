@@ -1001,7 +1001,7 @@ class PlayerManager(object):
                         self._video.item.get("ParentIndexNumber"),
                         self._video.item.get("IndexNumber"),
                     )
-                    season_number = self._video.item.get("ParentIndexNumber")
+                    season_number = int(self._video.item.get("ParentIndexNumber"))
                 else:
                     title = self._video.item.get("Name")
                     subtitle = str(self._video.item.get("ProductionYear", ""))
